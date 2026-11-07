@@ -1,0 +1,115 @@
+/* Layout: one phone-width column; three views (menu, question, result) swap in place; the exam card is the one accented object.
+   Written for old phones too: no web fonts, no flex gap, no max()/inset/logical properties without a plain fallback first. */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --fg:#1d1f22; --muted:#5d6168; --line:#dcdad4;
+  --accent:#e8740c; --accent-ink:#9a4a00; --on-accent:#ffffff; --ok:#1f7a4d; --ok-bg:#e3f3ea; --bad:#c0392b; --bad-bg:#fbe7e4; --chip:#ecebe6; --sel:#fff1e3;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16171a; --surface:#1f2125; --fg:#ecebe8; --muted:#a3a6ad; --line:#33363c;
+  --accent:#ff9433; --accent-ink:#ffb36b; --on-accent:#1d1205; --ok:#5cc98f; --ok-bg:#183326; --bad:#ff7a6b; --bad-bg:#3a1f1c; --chip:#2a2d32; --sel:#3a2714; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16171a; --surface:#1f2125; --fg:#ecebe8; --muted:#a3a6ad; --line:#33363c;
+  --accent:#ff9433; --accent-ink:#ffb36b; --on-accent:#1d1205; --ok:#5cc98f; --ok-bg:#183326; --bad:#ff7a6b; --bad-bg:#3a1f1c; --chip:#2a2d32; --sel:#3a2714; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#f6f5f2;background:var(--bg);color:#1d1f22;color:var(--fg);font:16px/1.5 Roboto,Arial,sans-serif;font:16px/1.5 var(--f-body);
+  -webkit-text-size-adjust:100%;padding:0 16px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:0;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+img{max-width:100%}
+.wrap{max-width:640px;margin:0 auto}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:11px 20px;font-weight:700;font-size:16px;cursor:pointer;background:var(--chip);color:var(--fg)}
+.btn.main{background:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.small{padding:7px 14px;font-size:14px}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+h1{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.01em;margin:0 0 8px}
+h2{font-size:19px;line-height:1.25;font-weight:800;margin:0 0 10px}
+header{padding:26px 0 14px}
+.lead{color:var(--muted);margin:0;font-size:15px}
+.lead b{color:var(--fg)}
+section.block{margin-top:22px}
+/* grids: old engines without grid simply stack the boxes */
+.facts,.modes,.prog{display:grid;grid-gap:8px;gap:8px}
+.facts{grid-template-columns:1fr 1fr 1fr;margin:0 0 14px}
+.modes,.prog{grid-template-columns:1fr 1fr;grid-gap:10px;gap:10px}
+.modes{margin-top:10px}
+.exam{background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:16px}
+.exam h2{margin-bottom:12px}
+.fact{background:var(--chip);border-radius:8px;padding:8px;text-align:center}
+.fact .v{font-size:21px;line-height:1.1;font-weight:800;color:var(--accent-ink)}
+.fact .l{font-size:12px;color:var(--muted);margin-top:3px}
+.exam .btn{width:100%}
+.mode{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;min-width:0}
+.mode b{display:block;font-weight:700}
+.mode span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.mode:disabled{cursor:default;opacity:.6}
+.pbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.pbox .v{font-size:23px;line-height:1.1;font-weight:800}
+.pbox .l{font-size:13px;color:var(--muted);margin-top:4px}
+.meter{display:block;height:6px;border-radius:999px;background:var(--chip);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:999px}
+.topic{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;margin-top:6px}
+.topic .tr{display:flex;justify-content:space-between;align-items:center}
+.topic .tn{font-weight:600;min-width:0;padding-right:12px}
+.topic .tc{font-size:13px;color:var(--muted);white-space:nowrap}
+.topic .meter{margin-top:6px;height:4px}
+.hist{list-style:none;padding:0;margin:0;font-size:14px}
+.hist li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.hist li span+span{margin-left:10px}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--bad);font-weight:700}
+.reset{margin-top:22px}
+.reset .btn,.reset span{margin:0 8px 8px 0;display:inline-block;vertical-align:middle}
+.reset span .btn{margin:6px 6px 0 0}
+.foot{color:var(--muted);font-size:13px;margin-top:22px}
+.foot a{color:var(--accent-ink)}
+/* question view */
+.qbar{position:-webkit-sticky;position:sticky;top:0;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  padding:10px 16px 8px;margin:0 -16px;border-bottom:1px solid var(--line);
+  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.qbar .row{display:flex;align-items:center;max-width:640px;margin:0 auto}
+.qbar .row>*+*{margin-left:10px}
+.qbar .ttl{-webkit-box-flex:1;flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qbar .pos,.qbar .score{font-size:14px;color:var(--muted);white-space:nowrap}
+.timer{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.track{max-width:640px;margin:8px auto 0;height:4px;background:var(--chip);border-radius:999px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent)}
+.confirm{max-width:640px;margin:10px auto 0;font-size:14px}
+.confirm>*{display:inline-block;vertical-align:middle;margin:0 8px 6px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:14px}
+.qh{margin-bottom:4px}
+.qh>*+*{margin-left:8px}
+.n{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.flag{display:inline-block;font-size:12px;font-weight:700;color:var(--bad);background:var(--bad-bg);padding:1px 8px;border-radius:999px}
+.qt{margin:0 0 10px;font-weight:700;font-size:17px;line-height:1.4}
+.card img{display:block;max-width:100%;height:auto;margin:4px 0 12px;border-radius:6px;background:#fff}
+.opt{display:flex;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;font-size:16px;line-height:1.4;margin-top:8px}
+.opt .l{-webkit-flex:none;flex:none;font-weight:800;width:1.1em;margin-right:12px;color:var(--muted)}
+.opt:disabled{cursor:default;color:var(--fg);opacity:1}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.ok .l{color:var(--ok)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt.bad .l{color:var(--bad)}
+.opt.dim{opacity:.6}
+.why{margin:12px 0 0;font-size:15px;line-height:1.5;padding-left:10px;border-left:3px solid var(--line)}
+.why.good{border-left-color:var(--ok)}.why.badw{border-left-color:var(--bad)}
+.why b{font-weight:800}
+.next{position:-webkit-sticky;position:sticky;bottom:0;z-index:4;text-align:right;margin-top:6px;background:var(--bg);padding:10px 0;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.next .btn.main{min-width:140px}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+/* result view */
+.verdict{padding:26px 0 6px}
+.verdict .big{font-size:32px;line-height:1.1;font-weight:800;margin:0 0 6px}
+.verdict .big.pass{color:var(--ok)}.verdict .big.fail{color:var(--bad)}
+.rbtns{margin-top:14px}
+.rbtns .btn{margin:0 8px 8px 0}
+.rlist .card{margin-top:10px}
+.rlist .opt{cursor:default}
+@media (max-width:420px){h1{font-size:24px}.fact .v{font-size:18px}.modes,.prog{grid-template-columns:1fr}}
